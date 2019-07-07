@@ -1,99 +1,226 @@
-port module Main exposing (..)
-
-{-| TodoMVC implemented in Elm, using plain HTML and CSS for rendering.
-
-This application is broken up into three key parts:
-
-  1. Model  - a full definition of the application's state
-  2. Update - a way to step the application state forward
-  3. View   - a way to visualize our application state with HTML
-
-This clean division of concerns is a core part of Elm. You can read more about
-this in <http://guide.elm-lang.org/architecture/index.html>
--}
+port module Main exposing (Model, Msg(..), emptyModel, infoFooter, init, main, update, view)
 
 import Browser
 import Browser.Dom as Dom
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2)
-import Json.Decode as Json
-import Task
+import Random exposing (Generator)
+
+
+get : Int -> List a -> Maybe a
+get index list =
+    if index < 0 then
+        Nothing
+
+    else
+        case List.drop index list of
+            [] ->
+                Nothing
+
+            x :: xs ->
+                Just x
+
+
+selectWithDefault : a -> List a -> Generator a
+selectWithDefault defaultValue list =
+    Random.map (Maybe.withDefault defaultValue) (select list)
+
+
+select : List a -> Generator (Maybe a)
+select list =
+    Random.map (\index -> get index list)
+        (Random.int 0 (List.length list - 1))
 
 
 main : Program (Maybe Model) Model Msg
 main =
     Browser.document
         { init = init
-        , view = \model -> { title = "Elm • TodoMVC", body = [view model] }
-        , update = updateWithStorage
+        , view = \model -> { title = "Random Praise Phrases", body = [ view model ] }
+        , update = update
         , subscriptions = \_ -> Sub.none
         }
 
 
-port setStorage : Model -> Cmd msg
-
-
-{-| We want to `setStorage` on every update. This function adds the setStorage
-command for every step of the update function.
--}
-updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
-updateWithStorage msg model =
-    let
-        ( newModel, cmds ) =
-            update msg model
-    in
-        ( newModel
-        , Cmd.batch [ setStorage newModel, cmds ]
-        )
-
-
 
 -- MODEL
-
-
 -- The full application state of our todo app.
+
+
 type alias Model =
-    { entries : List Entry
-    , field : String
-    , uid : Int
-    , visibility : String
-    }
-
-
-type alias Entry =
-    { description : String
-    , completed : Bool
-    , editing : Bool
-    , id : Int
-    }
+    String
 
 
 emptyModel : Model
 emptyModel =
-    { entries = []
-    , visibility = "All"
-    , field = ""
-    , uid = 0
-    }
+    "opp"
 
 
-newEntry : String -> Int -> Entry
-newEntry desc id =
-    { description = desc
-    , completed = False
-    , editing = False
-    , id = id
-    }
+data : List Model
+data =
+    [ "Great!"
+    , "Phenomenal!"
+    , "Superb!"
+    , "Cool!"
+    , "Out Of Sight!"
+    , "Excellent!"
+    , "Unbelievable Work!"
+    , "Two Thumbs Up!"
+    , "You've Got It!"
+    , "Way To Go!"
+    , "Terrific!"
+    , "Outstanding Performance!"
+    , "You've Outdone Yourself!"
+    , "Marvelous!"
+    , "Your Help Counts!"
+    , "Amazing Effort!"
+    , "Bravo!"
+    , "Exceptional!"
+    , "Breathtaking!"
+    , "Wonderful!"
+    , "You're Special!"
+    , "Keep Up The Good Work!"
+    , "First Rate Work!"
+    , "Fantastic Work!"
+    , "You Should Be Proud!"
+    , "I Knew You Had It In You!"
+    , "Very Good!"
+    , "Stupendous!"
+    , "Sensational!"
+    , "A+ Work!"
+    , "What An Imagination!"
+    , "Awesome!"
+    , "You're A Great Example For Others!"
+    , "You Made It Happen!"
+    , "You're A Real Trooper!"
+    , "It Couldn't Be Better!"
+    , "Good For You!"
+    , "You're A Good Sport!"
+    , "You Made The Difference!"
+    , "Take A Bow!"
+    , "Super Job!"
+    , "You're Unique!"
+    , "It's Everything I Hoped For!"
+    , "How Thoughtful Of You!"
+    , "Nice Going!"
+    , "You're A Class Act!"
+    , "Well Done!"
+    , "You're Inspiring!"
+    , "How Artistic!"
+    , "You Go The Extra Mile!"
+    , "Hooray For You!"
+    , "Great Answer!"
+    , "You Deserve A Hug!"
+    , "High Five!"
+    , "Extra Special Work!"
+    , "Wow!"
+    , "You're Getting Better!"
+    , "You're Tops!"
+    , "You're Amazing!"
+    , "What A Great Idea!"
+    , "You Figured It Out"
+    , "You've Got What It Takes!"
+    , "You're Neat!"
+    , "You're A Joy!"
+    , "You're A Shining Star!"
+    , "Spectacular Work!"
+    , "You're #1!"
+    , "You Tried Hard!"
+    , "The Time You Put In Really Shows!"
+    , "Remarkable!"
+    , "Far Out!"
+    , "How Extraordinary!"
+    , "You're A Winner!"
+    , "You Came Through!"
+    , "That's Incredible!"
+    , "5 Star Work!"
+    , "You're Super!"
+    , "You Can Do It!"
+    , "You're The Greatest!"
+    , "Sweet!"
+    , "Great Effort!"
+    , "How Original!"
+    , "What A Genius!"
+    , "You're A Natural!"
+    , "Very Brave!"
+    , "You're A Pleasure To Know!"
+    , "Way To Go!"
+    , "You're Sharp!"
+    , "Congratulations!"
+    , "I'm Proud Of You!"
+    , "Thank You For Caring!"
+    , "I'm Impressed!"
+    , "You're Very Talented!"
+    , "Great Discovery!"
+    , "You're A Champ!"
+    , "Right On!"
+    , "You're So Kind!"
+    , "Thanks For Helping!"
+    , "You're A-OK!"
+    , "Magnificent!"
+    , "You've Earned My Respect!"
+    , "You've Made Progress!"
+    , "Outstanding Effort!"
+    , "Neat Work!"
+    , "I Love It!"
+    , "Beautiful!"
+    , "Clever!"
+    , "Brilliant!"
+    , "That's Perfect!"
+    , "Right On!"
+    , "Your Best Work!"
+    , "Expressive!"
+    , "You've Improved!"
+    , "Keep It Up!"
+    , "Nice One!"
+    , "Wicked!"
+    , "Incomparable!"
+    , "Incredible!"
+    , "I Appreciate Your Help!"
+    , "Good Leadership!"
+    , "Great Job!"
+    , "Stunning!"
+    , "You Rule!"
+    , "That's Very Kind!"
+    , "Keep On Trying!"
+    , "You Make Me Smile!"
+    , "You Rock!"
+    , "You're An Angel!"
+    , "That's The Way!"
+    , "Good For You!"
+    , "A Job Well Done!"
+    , "You're A Good Friend!"
+    , "Way To Use Your Head!"
+    , "Radical!"
+    , "Alright!"
+    , "You're Very Patient!"
+    , "Wonderful!"
+    , "Way To Be Responsible!"
+    , "Getting Better All The Time!"
+    , "Worthy Of An Oscar!"
+    , "Better Than Ever!"
+    , "Super Duper!"
+    , "Great Dedication!"
+    , "Top Notch!"
+    , "Hats Off To You!"
+    , "Spectacular!"
+    , "Good Try!"
+    , "Very Courageous!"
+    , "I Like It!"
+    , "Great Enthusiasm!"
+    , "Lovely!"
+    , "Very Resourceful!"
+    , "It's A Masterpiece!"
+    ]
 
 
 init : Maybe Model -> ( Model, Cmd Msg )
 init maybeModel =
-  ( Maybe.withDefault emptyModel maybeModel
-  , Cmd.none
-  )
+    ( Maybe.withDefault emptyModel maybeModel
+    , Cmd.none
+    )
 
 
 
@@ -105,110 +232,23 @@ messages are fed into the `update` function as they occur, letting us react
 to them.
 -}
 type Msg
-    = NoOp
-    | UpdateField String
-    | EditingEntry Int Bool
-    | UpdateEntry Int String
-    | Add
-    | Delete Int
-    | DeleteComplete
-    | Check Int Bool
-    | CheckAll Bool
-    | ChangeVisibility String
+    = GetRandomPraise
+    | NewPraise String
 
 
+randomPraise : Random.Generator String
+randomPraise =
+    selectWithDefault "ok" data
 
--- How we update our Model on a given Msg?
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
+        NewPraise praise ->
+            ( praise, Cmd.none )
 
-        Add ->
-            ( { model
-                | uid = model.uid + 1
-                , field = ""
-                , entries =
-                    if String.isEmpty model.field then
-                        model.entries
-                    else
-                        model.entries ++ [ newEntry model.field model.uid ]
-              }
-            , Cmd.none
-            )
-
-        UpdateField str ->
-            ( { model | field = str }
-            , Cmd.none
-            )
-
-        EditingEntry id isEditing ->
-            let
-                updateEntry t =
-                    if t.id == id then
-                        { t | editing = isEditing }
-                    else
-                        t
-
-                focus =
-                    Dom.focus ("todo-" ++ String.fromInt id)
-            in
-            ( { model | entries = List.map updateEntry model.entries }
-            , Task.attempt (\_ -> NoOp) focus
-            )
-
-        UpdateEntry id task ->
-            let
-                updateEntry t =
-                    if t.id == id then
-                        { t | description = task }
-                    else
-                        t
-            in
-            ( { model | entries = List.map updateEntry model.entries }
-            , Cmd.none
-            )
-
-        Delete id ->
-            ( { model | entries = List.filter (\t -> t.id /= id) model.entries }
-            , Cmd.none
-            )
-
-        DeleteComplete ->
-            ( { model | entries = List.filter (not << .completed) model.entries }
-            , Cmd.none
-            )
-
-        Check id isCompleted ->
-            let
-                updateEntry t =
-                    if t.id == id then
-                        { t | completed = isCompleted }
-                    else
-                        t
-            in
-            ( { model | entries = List.map updateEntry model.entries }
-            , Cmd.none
-            )
-
-        CheckAll isCompleted ->
-            let
-                updateEntry t =
-                    { t | completed = isCompleted }
-            in
-            ( { model | entries = List.map updateEntry model.entries }
-            , Cmd.none
-            )
-
-        ChangeVisibility visibility ->
-            ( { model | visibility = visibility }
-            , Cmd.none
-            )
-
-
-
--- VIEW
+        GetRandomPraise ->
+            ( model, Random.generate NewPraise randomPraise )
 
 
 view : Model -> Html Msg
@@ -218,205 +258,17 @@ view model =
         , style "visibility" "hidden"
         ]
         [ section
-            [ class "todoapp" ]
-            [ lazy viewInput model.field
-            , lazy2 viewEntries model.visibility model.entries
-            , lazy2 viewControls model.visibility model.entries
-            ]
+            []
+            [ text model ]
+        , div
+            []
+            [ button [ onClick GetRandomPraise ] [ text "Click Me!" ] ]
         , infoFooter
         ]
 
 
-viewInput : String -> Html Msg
-viewInput task =
-    header
-        [ class "header" ]
-        [ h1 [] [ text "todos" ]
-        , input
-            [ class "new-todo"
-            , placeholder "What needs to be done?"
-            , autofocus True
-            , value task
-            , name "newTodo"
-            , onInput UpdateField
-            , onEnter Add
-            ]
-            []
-        ]
-
-
-onEnter : Msg -> Attribute Msg
-onEnter msg =
-    let
-        isEnter code =
-            if code == 13 then
-                Json.succeed msg
-            else
-                Json.fail "not ENTER"
-    in
-        on "keydown" (Json.andThen isEnter keyCode)
-
-
 
 -- VIEW ALL ENTRIES
-
-
-viewEntries : String -> List Entry -> Html Msg
-viewEntries visibility entries =
-    let
-        isVisible todo =
-            case visibility of
-                "Completed" ->
-                    todo.completed
-
-                "Active" ->
-                    not todo.completed
-
-                _ ->
-                    True
-
-        allCompleted =
-            List.all .completed entries
-
-        cssVisibility =
-            if List.isEmpty entries then
-                "hidden"
-            else
-                "visible"
-    in
-        section
-            [ class "main"
-            , style "visibility" cssVisibility
-            ]
-            [ input
-                [ class "toggle-all"
-                , type_ "checkbox"
-                , name "toggle"
-                , checked allCompleted
-                , onClick (CheckAll (not allCompleted))
-                ]
-                []
-            , label
-                [ for "toggle-all" ]
-                [ text "Mark all as complete" ]
-            , Keyed.ul [ class "todo-list" ] <|
-                List.map viewKeyedEntry (List.filter isVisible entries)
-            ]
-
-
-
--- VIEW INDIVIDUAL ENTRIES
-
-
-viewKeyedEntry : Entry -> ( String, Html Msg )
-viewKeyedEntry todo =
-    ( String.fromInt todo.id, lazy viewEntry todo )
-
-
-viewEntry : Entry -> Html Msg
-viewEntry todo =
-    li
-        [ classList [ ( "completed", todo.completed ), ( "editing", todo.editing ) ] ]
-        [ div
-            [ class "view" ]
-            [ input
-                [ class "toggle"
-                , type_ "checkbox"
-                , checked todo.completed
-                , onClick (Check todo.id (not todo.completed))
-                ]
-                []
-            , label
-                [ onDoubleClick (EditingEntry todo.id True) ]
-                [ text todo.description ]
-            , button
-                [ class "destroy"
-                , onClick (Delete todo.id)
-                ]
-                []
-            ]
-        , input
-            [ class "edit"
-            , value todo.description
-            , name "title"
-            , id ("todo-" ++ String.fromInt todo.id)
-            , onInput (UpdateEntry todo.id)
-            , onBlur (EditingEntry todo.id False)
-            , onEnter (EditingEntry todo.id False)
-            ]
-            []
-        ]
-
-
-
--- VIEW CONTROLS AND FOOTER
-
-
-viewControls : String -> List Entry -> Html Msg
-viewControls visibility entries =
-    let
-        entriesCompleted =
-            List.length (List.filter .completed entries)
-
-        entriesLeft =
-            List.length entries - entriesCompleted
-    in
-        footer
-            [ class "footer"
-            , hidden (List.isEmpty entries)
-            ]
-            [ lazy viewControlsCount entriesLeft
-            , lazy viewControlsFilters visibility
-            , lazy viewControlsClear entriesCompleted
-            ]
-
-
-viewControlsCount : Int -> Html Msg
-viewControlsCount entriesLeft =
-    let
-        item_ =
-            if entriesLeft == 1 then
-                " item"
-            else
-                " items"
-    in
-        span
-            [ class "todo-count" ]
-            [ strong [] [ text (String.fromInt entriesLeft) ]
-            , text (item_ ++ " left")
-            ]
-
-
-viewControlsFilters : String -> Html Msg
-viewControlsFilters visibility =
-    ul
-        [ class "filters" ]
-        [ visibilitySwap "#/" "All" visibility
-        , text " "
-        , visibilitySwap "#/active" "Active" visibility
-        , text " "
-        , visibilitySwap "#/completed" "Completed" visibility
-        ]
-
-
-visibilitySwap : String -> String -> String -> Html Msg
-visibilitySwap uri visibility actualVisibility =
-    li
-        [ onClick (ChangeVisibility visibility) ]
-        [ a [ href uri, classList [ ( "selected", visibility == actualVisibility ) ] ]
-            [ text visibility ]
-        ]
-
-
-viewControlsClear : Int -> Html Msg
-viewControlsClear entriesCompleted =
-    button
-        [ class "clear-completed"
-        , hidden (entriesCompleted == 0)
-        , onClick DeleteComplete
-        ]
-        [ text ("Clear completed (" ++ String.fromInt entriesCompleted ++ ")")
-        ]
 
 
 infoFooter : Html msg
